@@ -31,18 +31,18 @@ void printWarning(char* msg)
     return;
 }
 
-void printPersonWithType(t_person* tmpPerson, char* prefix, char* type)
+void printPersonWithType(t_person* tmpPerson, char* type)
 {
-    if (!testPerson(tmpPerson)) {
+    if (!testObj(tmpPerson)) {
         error("Fehlerhafte Parameter&uuml;bergabe bei 'printPersonWithType()'!");
     }
     
     if (strcmp(type, "")) {
         printf(
-            "%s%s%s%s%s%s%s%ld%s%s%s%ld%s%s%s%s%s%s%s%s%02d.%02d.%04d%s%s",
+            "%s%s%s%s%s%ld%s%s%s%ld%s%s%s%s%s%s%s%s%02d.%02d.%04d%s%s",
             "<tr>",
                 "<td style='text-align:right;'>",
-                    "<input type='", type, "' name='", prefix, "personId' value='", tmpPerson->id, "'>",
+                    "<input type='", type, "' name='personId' value='", tmpPerson->id, "'>",
                 "</td>",
                 "<td style='text-align:right;'>",
                     tmpPerson->id,
@@ -102,18 +102,18 @@ void printNotFound(char* string)
     return;
 }
 
-void printLoanWithType(t_loan* tmpLoan, char* prefix, char* type)
+void printLoanWithType(t_loan* tmpLoan, char* type)
 { // wie siehts mit den items aus?
-    if (!testLoan(tmpLoan)) {
+    if (!testObj(tmpLoan)) {
         error("Fehlerhafte Parameter&uuml;bergabe bei 'printLoan()'!");
     }
     
     if (strcmp(type, "")) {
         printf(
-        "%s%s%s%s%s%s%s%ld%s%s%s%ld%s%s%ld%s%s%02d.%02d.%04d%s%s%02d.%02d.%04d%s%s",
+        "%s%s%s%s%s%ld%s%s%s%ld%s%s%ld%s%s%02d.%02d.%04d%s%s%02d.%02d.%04d%s%s",
         "<tr>",
             "<td style='text-align:right;'>",
-               "<input type='", type, "' name='", prefix, "personId' value='", tmpLoan->id, "'>",
+               "<input type='", type, "' name='personId' value='", tmpLoan->id, "'>",
             "</td>",
             "<td style='text-align:right;'>",
                tmpLoan->id,
@@ -152,18 +152,18 @@ void printLoanWithType(t_loan* tmpLoan, char* prefix, char* type)
     return;
 }
 
-void printItemWithType(t_item* tmpItem, char* prefix, char* type)
+void printItemWithType(t_item* tmpItem, char* type)
 {
-    if (!testItem(tmpItem)) {
+    if (!testObj(tmpItem)) {
         error("Fehlerhafte Parameter&uuml;bergabe bei 'printItemWithType()'!");
     }
     
     if (strcmp(type, "")) {
         printf(
-            "%s%s%s%s%s%s%s%ld%s%s%s%ld%s%s%ld%s%s%s%s%s%s%s%s%s%s%s",
+            "%s%s%s%s%s%ld%s%s%s%ld%s%s%ld%s%s%s%s%s%s%s%s%s%s%s",
             "<tr>",
                 "<td style='text-align:right;'>",
-                    "<input type='", type, "' name='", prefix, "personId' value='", tmpItem->id, "'>",
+                    "<input type='", type, "' name='personId' value='", tmpItem->id, "'>",
                 "</td>",
                 "<td style='text-align:right;'>",
                     tmpItem->id,

@@ -28,14 +28,14 @@ t_person* inputPerson(t_person* firstPerson, t_person* lastPerson, char* vorname
         error("Eingabe der Person ist falsch!");
     }
     
-    tmpPerson = createPerson(vorname, nachname, createDate(tag, monat, jahr), getMaxPersonId(firstPerson) + 1);
-    addPersonToList(lastPerson, tmpPerson);
-    if (!testPerson(firstPerson)) {
+    tmpPerson = createPerson(vorname, nachname, createDate(tag, monat, jahr), getMaxObjId(firstPerson) + 1);
+    addObjToList(lastPerson, tmpPerson);
+    if (!testObj(firstPerson)) {
         firstPerson = tmpPerson;
     }
-    appendPersonToData(tmpPerson);
+    appendObjToData("person", tmpPerson);
     
-    if (!testPerson(tmpPerson)) {
+    if (!testObj(tmpPerson)) {
         error("Person konnte nicht eingelesen werden!");
     } else {
         printAddSuccess("person");

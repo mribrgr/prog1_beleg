@@ -21,6 +21,8 @@ void warning(char* msg);
 /* Funktionen für die Anzeige */
 void viewMain(t_person* firstPerson, t_item* firstItem, t_loan* firstLoan);
 
+char* parseQueryString(t_person* firstPerson, t_item* firstItem, t_loan* firstLoan);
+
 /* Print Funktionen */
 void printError(char* msg);
 void printWarning(char* msg);
@@ -31,5 +33,22 @@ void printNotFound(char* string);
 
 /* input functions */
 int testInputNewPerson(char* vorname, char* nachname, int tag, int monat, int jahr);
+
+/* general functions */
+int testObj(void* input);
+void* getObj (unsigned long identifier, void* firstObj);
+void appendObjToData (char* structure, void* tmp);
+void writeObjToData(char* structure, FILE* filePointer, void* tmpObj);
+void writeObjListToData (char* structure, void* tmp);
+void* addObjListDataToList(char* structure, t_person* firstPerson, t_item* firstItem, t_loan* firstLoan, void* lastObj);
+void* deleteObjFromList(char* structure, void* tmpObj, void* firstObj);
+/* memory - handling */
+void freeObj(char* structure, void* tmpObj);
+void freeObjList(char* structure, void* firstObj);
+
+void* addObjToList(void* beforeObj, void* inputObj);
+/* ID - handling */
+unsigned long getMaxObjId(void* firstObj);
+unsigned long getLastObjId(void* firstObj);
 
 #endif /* main_h */

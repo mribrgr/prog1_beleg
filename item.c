@@ -19,27 +19,6 @@
 #include "person.h"
 #include "loan.h"
 
-t_item* getItem(unsigned long identifier, t_item* firstItem)
-{
-    if (!testItem(firstItem)) {
-        return NULL;
-    }
-    
-    t_item* currItem = firstItem;
-    if (currItem->id == identifier) {
-        return currItem;
-    }
-    currItem = currItem->next;
-    while(currItem) {
-        if (currItem->id == identifier) {
-            return currItem;
-        }
-        currItem = currItem->next;
-    }
-    
-    return NULL;
-}
-
 t_item* createItem(char* name, char* type, char* author, unsigned long identifier)
 {
     t_item* tmpItem = malloc(sizeof(t_item));
@@ -58,92 +37,16 @@ t_item* createItem(char* name, char* type, char* author, unsigned long identifie
     return tmpItem;
 }
 
-/* Gibt die hoechste Id zurueck*/ // eventuell so umwandeln, dass auch eventuell freie IDs vergeben werden von Personen die mal gelöscht wurden
-unsigned long getMaxItemId(t_item* firstItem)
-{
-    /* Deklarationen & Definitionen */
-    unsigned long curr;
-    t_item* tmpItem = firstItem;
-    
-    if (!testItem(firstItem)) {
-        return 0;
-    }
-    
-    curr = firstItem->id;
-    
-    while (tmpItem) {
-        if (curr < tmpItem->id) {
-            curr = tmpItem->id;
-        }
-        tmpItem = tmpItem->next;
-    }
-    
-    return curr;
-}
-
-/* Gibt die letzte Id zurueck */
-unsigned long getLastItemId(t_item* firstItem)
-{
-    /* Definitionen */
-    t_item* tmpItem = firstItem;
-    
-    if (!testItem(firstItem)) {
-        return 0;
-    }
-    
-    while (tmpItem->next) {
-        tmpItem = tmpItem->next;
-    }
-    
-    return tmpItem->id;
-}
-
-/* Legt den Speicher von einer Person wieder frei,
- es werden nicht die ->next oder ->before Zeiger beachtet. */
-void freeItem(t_item* tmpItem)
-{
-    if (!testItem(tmpItem)) {
-        return;
-    }
-    
-    free(tmpItem->name);
-    free(tmpItem->type);
-    free(tmpItem->author);
-    free(tmpItem);
-    tmpItem = NULL;
-    
-    return;
-}
-
-void freeItemList(t_item* firstItem)
-{
-    if (!testItem(firstItem)) {
-        return;
-    }
-    
-    t_item* tmpItem = firstItem->next;
-    if (tmpItem) {
-        while (tmpItem->next) {
-            tmpItem = tmpItem->next;
-            freeItem(tmpItem->before);
-        }
-        freeItem(tmpItem);
-    }
-    freeItem(firstItem);
-    
-    return;
-}
-
 t_item** getItemsFromItemList(unsigned long personId, t_item* firstItem)
 { // Problem: es wird speicherplatz für Items erstellt, die schon Speicher reserviert bekommen haben
     /* Definitionen */
     t_item** tmpItems = NULL;
     
-    if (!testItem(firstItem)) {
+    if (!testObj(firstItem)) {
         return NULL;
     }
     
-    tmpItems = malloc(sizeof(t_item));
+    tmpItems = malloc(sizeof(t_item*));
     if (!tmpItems) {
         error("Speicherreservierung fehlgeschlagen bei 'getItemsFromString()'!");
     }
@@ -155,11 +58,11 @@ t_item** getItemsFromItemList(unsigned long personId, t_item* firstItem)
     currItem = currItem->next;
     while (currItem) {
         if (currItem->person->id == personId) {
-            tmpItems = realloc(tmpItems, sizeof(tmpItems) + sizeof(t_item));
+            tmpItems = realloc(tmpItems, sizeof(tmpItems) + sizeof(t_item*));
             if (!tmpItems) {
                 error("Speicherreservierung fehlgeschlagen bei 'getItemsFromString()'!");
             }
-            tmpItems[sizeof(tmpItems) / sizeof(t_item)] = currItem;
+            tmpItems[sizeof(tmpItems) / sizeof(t_item*)] = currItem;
         }
         currItem = currItem->next;
     }
@@ -185,17 +88,6 @@ int countItemsWithPersonId(unsigned long personId, t_item* firstItem)
     }
     
     return count;
-}
-
-int testItem(t_item* tmpItem)
-{
-    if (tmpItem) {
-        if (tmpItem->id) {
-            return 1;
-        }
-    }
-    
-    return 0;
 }
 
 /* Guckt ob die angegebene Linie der Datei gültig ist */

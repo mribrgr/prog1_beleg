@@ -19,28 +19,6 @@
 #include "person.h"
 #include "loan.h"
 
-t_person* getPerson(unsigned long identifier, t_person* firstPerson)
-{
-    if (!testPerson(firstPerson)) {
-//        printPersonNotFound();
-        return NULL;
-    }
-    
-    t_person* currPerson = firstPerson;
-    if (currPerson->id == identifier) {
-        return currPerson;
-    }
-    currPerson = currPerson->next;
-    while(currPerson) {
-        if (currPerson->id == identifier) {
-            return currPerson;
-        }
-        currPerson = currPerson->next;
-    }
-    
-    return NULL;
-}
-
 t_person* createPerson(char* firstName, char* lastName, t_date* gebDatum, unsigned long identifier)
 {
     t_person* tmpPerson = malloc(sizeof(t_person));
@@ -55,93 +33,6 @@ t_person* createPerson(char* firstName, char* lastName, t_date* gebDatum, unsign
     tmpPerson->gebDatum = gebDatum;
     
     return tmpPerson;
-}
-
-/* Gibt die hoechste Id zurueck*/ // eventuell so umwandeln, dass auch eventuell freie IDs vergeben werden von Personen die mal gelöscht wurden
-unsigned long getMaxPersonId(t_person* firstPerson)
-{
-    /* Deklarationen & Definitionen */
-    unsigned long curr;
-    t_person* tmpPerson = firstPerson;
-    
-    if (!testPerson(firstPerson)) {
-        return 0;
-    }
-    
-    curr = firstPerson->id;
-    
-    while (tmpPerson) {
-        if (curr < tmpPerson->id) {
-            curr = tmpPerson->id;
-        }
-        tmpPerson = tmpPerson->next;
-    }
-    
-    return curr;
-}
-
-/* Gibt die letzte Id zurueck */
-unsigned long getLastPersonId(t_person* firstPerson)
-{
-    /* Definitionen */
-    t_person* tmpPerson = firstPerson;
-    
-    if (!testPerson(firstPerson)) {
-        return 0;
-    }
-    
-    while (tmpPerson->next) {
-        tmpPerson = tmpPerson->next;
-    }
-    
-    return tmpPerson->id;
-}
-
-/* Legt den Speicher von einer Person wieder frei,
- es werden nicht die ->next oder ->before Zeiger beachtet. */
-void freePerson(t_person* tmpPerson)
-{
-    if (!testPerson(tmpPerson)) {
-        return;
-    }
-    
-    free(tmpPerson->first_name);
-    free(tmpPerson->last_name);
-    free(tmpPerson);
-    tmpPerson = NULL;
-    
-    return;
-}
-
-void freePersonList(t_person* firstPerson)
-{
-    if (!testPerson(firstPerson)) {
-        return;
-    }
-    
-    t_person* tmpPerson = firstPerson->next;
-    if (tmpPerson) {
-        while (tmpPerson->next) {
-            tmpPerson = tmpPerson->next;
-            freePerson(tmpPerson->before);
-        }
-        freePerson(tmpPerson);
-    }
-    freePerson(firstPerson);
-    
-    return;
-}
-
-// sollte noch verbessert werden, sodass wirklich alles überprüft wird
-int testPerson(t_person* tmpPerson)
-{
-    if (tmpPerson) {
-        if (tmpPerson->id) {
-            return 1;
-        }
-    }
-    
-    return 0;
 }
 
 /* Guckt ob die angegebene Linie der Datei gültig ist */
