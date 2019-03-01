@@ -1,7 +1,7 @@
 //
 //  loan.h
 //  beleg
-//
+//  46139
 //  Created by Mauritius Berger on 12.12.18.
 //  Copyright © 2018 Mauritius Berger. All rights reserved.
 //
@@ -10,36 +10,37 @@
 #define loan_h
 
 typedef struct loan {
-    unsigned long   id;                // eineindeutiger identifier, nicht einstellbar, vom System durchnummeriert
-    struct loan*    before;
-    struct loan*    next;
+    unsigned long   id;           /* one-to-one identifier              */
     
-    struct person*  person;
-    struct date*    loan_begin;
-    struct date*    loan_end;
-    struct item**   items;
-} t_loan;                               // t_loan = struct loan = Datenstruktur loan
+    struct loan     *before;
+    struct loan     *next;
+    
+    struct person   *person;      /* the connected person               */
+    struct item     *item;        /* the connected item                 */
+    struct date     *loan_begin;  /* date of the beginning of the loan  */
+    struct date     *loan_end;    /* date of the ending of the loan     */
+} t_loan;
 
 
 /* view functions */
-    void viewDelLoan(t_loan* firstLoan);
-    void viewNewLoan(t_person* firstPerson);
-    void viewSearchLoan(void); // unused?
-    void viewLoanListWithType(t_loan* firstLoan, char* function, char* type);
+void viewInputLoan       (char *function, char *personId, char *itemId);
+void viewLoanListWithType(t_loan *firstLoan, char *function, char *type, unsigned long identifier);
 
 /* print functions */
-    void printLoanWithType(t_loan* tmpLoan, char* type);
+void printLoanWithType(t_loan *tmpLoan, char *type);
 
-/* person - handling */
-    t_loan* createLoan(t_person* tmpPerson, t_date* loanBegin, t_date* loanEnd, t_item** items, unsigned long identifier);
+/* loan-handling */
+t_loan* createLoan(t_person* tmpPerson, t_date *loanBegin, t_date *loanEnd, t_item *item, unsigned long identifier);
+
 /* functions for verifications */
-    int testLoanDataLine(char* line);
-    int testInputNewLoan(t_person* tmpPerson, t_date* loanBegin, t_date* loanEnd, t_item** items);
+int testLoanObj     (t_loan *firstLoan, char *structure, unsigned long identifier);
+int testLoanDataLine(char* line);
+int testInputNewLoan(int tag, int monat, int jahr, int tag2, int monat2, int jahr2);
 
-/* functions for list- & datahandling */
-    t_loan* getLoanFromData(FILE* filePointer, t_person* firstPerson, t_item* firstItem);
+/* functions for list-&datahandling */
+t_loan *getLoanFromData(FILE* filePointer, t_person* firstPerson, t_item* firstItem);
+
 /* input functions */
-//    t_loan* inputLoan(t_loan* firstLoan, t_loan* lastLoan, char* vorname, char* nachname, int tag, int monat, int jahr);
-
+void inputLoan(t_loan *firstLoan, t_person *tmpPerson, t_item *tmpItem, int loan_begin_day, int loan_begin_month, int loan_begin_year, int loan_end_day, int loan_end_month, int loan_end_year, t_item *firstItem);
 
 #endif /* loan_h */

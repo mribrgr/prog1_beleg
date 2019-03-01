@@ -1,174 +1,376 @@
 //
 //  querystring.c
 //  beleg
-//
+//  46139
 //  Created by Mauritius Berger on 06.01.19.
 //  Copyright © 2019 Mauritius Berger. All rights reserved.
 //
 
-/* Standardbibliotheken */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
-/* Eigene Header-Dateien */
 #include "main.h"
 #include "date.h"
 #include "item.h"
 #include "person.h"
 #include "loan.h"
 
-char* parseQueryString(t_person* firstPerson, t_item* firstItem, t_loan* firstLoan)
+/* Parses the query-string and redirects to the next functions. */
+/* return-value: first Object of the list which got edited. */
+void *parseQueryString(t_person* firstPerson, t_item* firstItem, t_loan* firstLoan)
 {
-    int test;
-    char* queryString = getenv("QUERY_STRING");
+    char *queryString = getenv("QUERY_STRING");
+    void *firstObj = NULL;
     
-    /* begin general handling */
-        char* vorname = malloc(sizeof(char) * strlen(queryString));
-        char* nachname = malloc(sizeof(char) * strlen(queryString));
-        char* tag = malloc(sizeof(char) * strlen(queryString));
-        char* monat = malloc(sizeof(char) * strlen(queryString));
-        char* jahr = malloc(sizeof(char) * strlen(queryString));
+    if (strstr(queryString, "search") && strstr(queryString, "id=") && !strstr(queryString, "id=&"))
+        functionSearch(firstPerson, firstItem, firstLoan);
     
-        if (!vorname || !nachname || !tag || !monat || !jahr || !input_radio) {
-            error("Speicher konnte nicht reserviert werden f&uuml;r die einzugebene Person bei 'main()'!");
-        }
-    /* end general handling */
+    else if (strstr(queryString, "viewItem=Submit"))
+        functionView("item", firstPerson, firstItem, firstLoan);
+    else if (strstr(queryString, "viewPerson=Submit"))
+        functionView("person", firstPerson, firstItem, firstLoan);
+    else if (strstr(queryString, "viewLoan=Submit"))
+        functionView("loan", firstPerson, firstItem, firstLoan);
     
-    if (strstr(queryString, "addPerson_first_name=")) {
-        test = sscanf(queryString, "addPerson_first_name=%[^&]&addPerson_last_name=%[^&]&addPerson_date=%[^.].%[^.].%[^&]", vorname, nachname, tag, monat, jahr);
-        if (test != 5) {
-            error("Ung&uuml;ltige Eingabe bei 'main()'!");
-        }
-        lastPerson = inputPerson(firstPerson, lastPerson, vorname, nachname, atoi(tag), atoi(monat), atoi(jahr));
-        printf("<a href='https://www2.htw-dresden.de/~s79149/beleg.cgi'>zur&uuml;ck zur Startseite</a><br />");
-        
-    } else if (strstr(queryString, "addLoan_first_name=")) {
-        test = sscanf(queryString, "addLoan_first_name=%[^&]&addLoan_last_name=%[^&]&addLoan_date=%[^.].%[^.].%[^&]", vorname, nachname, tag, monat, jahr);
-        if (test != 5 && !testInputNewPerson(vorname, nachname, atoi(tag), atoi(monat), atoi(jahr)) ) {
-            error("Ung&uuml;ltige Eingabe bei 'main()'!");
-        }
-        tmpPerson = lastPerson = inputPerson(firstPerson, lastPerson, vorname, nachname, atoi(tag), atoi(monat), atoi(jahr));
-        
-        //            newLoan(firstPerson, lastPerson, tmpPerson);
-        printf("<a href='https://www2.htw-dresden.de/~s79149/beleg.cgi'>zur&uuml;ck zur Startseite</a><br />");
-    } else if (strstr(queryString, "addLoan_IS_personVorhanden=")) {
-        if (strstr(queryString, "addLoan_IS_personVorhanden=ja")) {
-            viewPersonListWithType(firstPerson, "addLoan_", "radio");
-        } else if (strstr(queryString, "addLoan_IS_personVorhanden=nein")) {
-            viewInputPerson("addLoan_");
-        }
-        printf("<a href='https://www2.htw-dresden.de/~s79149/beleg.cgi'>zur&uuml;ck zur Startseite</a><br />");
-    } else if (strstr(queryString, "addLoan_personId=")) {
-        test = sscanf(queryString, "addLoan_personId=%[^&]", personId);
-        if (test != 1) {
-            error("'sscanf()' - Fehler bei 'main():aL_personId'!");
-        }
-        tmpPerson = getObj(atol(personId), firstPerson);
-        if (!tmpPerson) {
-            error("Person wurde nicht gefunden!");
-        }
-        printf("<a href='https://www2.htw-dresden.de/~s79149/beleg.cgi'>zur&uuml;ck zur Startseite</a><br />");
+    else if (strstr(queryString, "addItem=Submit"))
+        functionAdd("item", firstPerson, firstItem, firstLoan);
+    else if (strstr(queryString, "addPerson=Submit"))
+        functionAdd("person", firstPerson, firstItem, firstLoan);
+    else if (strstr(queryString, "addLoan=Submit"))
+        functionAdd("loan", firstPerson, firstItem, firstLoan);
     
-    } else if (!strstr(queryString, "deleteItem_itemId=")) {
-        viewDelete("item");
-    } else if (!strstr(queryString, "deletePerson_personId=")) {
-        viewDelete("person");
-    } else if (!strstr(queryString, "deleteLoan_loanId=")) {
-        viewDelete("loan");
-        
-    } else {
-        viewMain(firstPerson, firstItem, firstLoan);
-    }
+    else if (strstr(queryString, "deleteItem=Submit"))
+        firstObj = functionDelete("item" , firstPerson, firstItem, firstLoan);
+    else if (strstr(queryString, "deletePerson=Submit"))
+        firstObj = functionDelete("person", firstPerson, firstItem, firstLoan);
+    else if (strstr(queryString, "deleteLoan=Submit"))
+        firstObj = functionDelete("loan" , firstPerson, firstItem, firstLoan);
     
-    free(vorname);
-    free(nachname);
-    free(tag);
-    free(monat);
-    free(jahr);
+    else viewMain(firstPerson, firstItem, firstLoan);
+    
+    return firstObj;
 }
 
-viewDelete(char* function, char* structure, char* firstPerson, char* firstItem, char* firstLoan)
+/* structure == "person" | "item" | "loan" */
+/* Displays the <structure>-list to the screen. */
+void functionView(char *structure, t_person* firstPerson, t_item* firstItem, t_loan* firstLoan)
 {
-    char* queryString = getenv("QUERY_STRING");
-    void* firstObj = NULL;
+    if (!strcmp(structure, "person")) {
+        viewPersonListWithType(firstPerson, "viewPerson", "", 0);
+    }
+    else if (!strcmp(structure, "item")) {
+        viewItemListWithType(firstItem, "viewItem", "", 0, firstPerson, "");
+    }
+    else if (!strcmp(structure, "loan")) {
+        viewLoanListWithType(firstLoan, "viewLoan", "", 0);
+    }
+    
+    printf("<a href='https://www2.htw-dresden.de/~s79149/beleg.cgi'>back to the homepage</a><br />");
+    
+    return;
+}
 
-    if (strstr(queryString, "Id=all")) {
-        /* Schnellste Art alle Personen zu löschen. */
-        if (!strcmp(structure, "person") || !strcmp(structure, "item")) {
-            if (testObj(firstLoan)) {
-                printf("Es konnten nicht alle %ss gel&ouml;scht werden, da es noch offenen Ausleihen gibt!<br />", structure); // am besten werden hier alle offenen Ausleihen angezeigt!
+/* structure == "person" | "item" | "loan" */
+/* Adds one element from the <structure>-list. */
+void functionAdd(char *structure, t_person* firstPerson, t_item* firstItem, t_loan* firstLoan)
+{
+    char *queryString = getenv("QUERY_STRING");
+    int test = 0;
+    
+    if (strstr(queryString, "personId=")) {
+        char *personId = malloc(sizeof(unsigned long));
+        if (!personId) error("Storage couldn't get reserved in 'functionAdd()'!");
+        test = sscanf(queryString, "personId=%[^&]", personId);
+        if (test != 1) error("person-id not found at 'functionAdd()'!");
+        viewExist("item", "addLoan", personId);
+        free(personId);
+        printf("<a href='https://www2.htw-dresden.de/~s79149/beleg.cgi'>back to the homepage</a><br />");
+    } else if (strstr(queryString, "itemId=")) {
+        char *personId = malloc(sizeof(unsigned long));
+        char *itemId = malloc(sizeof(unsigned long));
+        
+        if (!itemId || !personId) error("Storage couldn't get reserved in 'functionAdd()'!");
+        
+        test = sscanf(queryString, "%[^_]_itemId=%[^&]", personId, itemId);
+        if (test != 2) error("Invalid item-id!");
+        viewInputLoan("addLoan", personId, itemId);
+        
+        free(personId);
+        free(itemId);
+        printf("<a href='https://www2.htw-dresden.de/~s79149/beleg.cgi'>back to the homepage</a><br />");
+    } else if (strstr(queryString, "EXIST_person=")) {
+        if (strstr(queryString, "EXIST_person=true")) viewPersonListWithType(firstPerson, "addLoan", "radio", 0);
+        else if (strstr(queryString, "EXIST_person=false")) viewInputPerson("addLoan");
+        printf("<a href='https://www2.htw-dresden.de/~s79149/beleg.cgi'>back to the homepage</a><br />");
+    } else if (strstr(queryString, "EXIST_item=")) {
+        char *personId = malloc(sizeof(unsigned long));
+        if (!personId) error("Storage couldn't get reserved in 'functionAdd()'!");
+        test = sscanf(queryString, "%[^_]_EXIST_item=", personId);
+        if (test != 1) error("'sscanf()' - Fehler bei 'main():personId'!");
+        if (strstr(queryString, "EXIST_item=true")) viewItemListWithType(firstItem, "addLoan", "radio", 0, firstPerson, personId);
+        else if (strstr(queryString, "EXIST_item=false")) viewInputItem("addLoan", personId);
+        free(personId);
+        printf("<a href='https://www2.htw-dresden.de/~s79149/beleg.cgi'>back to the homepage</a><br />");
+    } else if (strstr(queryString, "loan_begin=") && strstr(queryString, "loan_end=")) {
+        t_person *tmpPerson = NULL;
+        t_item *tmpItem = NULL;
+        
+        char *personId = malloc(sizeof(unsigned long));
+        char *itemId = malloc(sizeof(unsigned long));
+        char *loan_begin_day = malloc(sizeof(char) * strlen(queryString));
+        char *loan_begin_month = malloc(sizeof(char) * strlen(queryString));
+        char *loan_begin_year = malloc(sizeof(char) * strlen(queryString));
+        char *loan_end_day = malloc(sizeof(char) * strlen(queryString));
+        char *loan_end_month = malloc(sizeof(char) * strlen(queryString));
+        char *loan_end_year = malloc(sizeof(char) * strlen(queryString));
+        
+        if (!personId||!itemId||!loan_begin_day||!loan_begin_month||!loan_begin_year||!loan_end_day||!loan_end_month||!loan_end_year)
+            error("Storage couldn't get reserved in 'functionAdd()'!");
+        
+        test = sscanf(queryString, "%[^_]_%[^_]_loan_begin=%[^.].%[^.].%[^&]&loan_end=%[^.].%[^.].%[^&]", personId, itemId, loan_begin_day, loan_begin_month, loan_begin_year, loan_end_day, loan_end_month, loan_end_year);
+        if (test != 8) error("Invalid input at 'functionAdd()'!");
+        
+        tmpPerson = (t_person *) getObj(atol(personId), firstPerson);
+        tmpItem = (t_item *) getObj(atol(itemId), firstItem);
+        if (!tmpPerson) error("person couldn't get found at 'functionAdd()'!");
+        if (!tmpItem) error("item couldn't get found at 'functionAdd()'!");
+        
+        inputLoan(firstLoan, tmpPerson, tmpItem, atoi(loan_begin_day), atoi(loan_begin_month), atoi(loan_begin_year), atoi(loan_end_day), atoi(loan_end_month), atoi(loan_end_year), firstItem);
+        
+        free(personId);
+        free(itemId);
+        free(loan_begin_day);
+        free(loan_begin_month);
+        free(loan_begin_year);
+        free(loan_end_day);
+        free(loan_end_month);
+        free(loan_end_year);
+        printf("<a href='https://www2.htw-dresden.de/~s79149/beleg.cgi'>back to the homepage</a><br />");
+    } else if (strstr(queryString, "first_name=") && strstr(queryString, "last_name=") && strstr(queryString, "date=")) {
+        char *vorname = malloc(sizeof(char) * strlen(queryString));
+        char *nachname = malloc(sizeof(char) * strlen(queryString));
+        char *tag = malloc(sizeof(char) * strlen(queryString));
+        char *monat = malloc(sizeof(char) * strlen(queryString));
+        char *jahr = malloc(sizeof(char) * strlen(queryString));
+
+        if (!vorname || !nachname || !tag || !monat || !jahr)
+            error("Storage couldn't get reserved in 'functionAdd()'!");
+        
+        test = sscanf(queryString, "first_name=%[^&]&last_name=%[^&]&date=%[^.].%[^.].%[^&]", vorname, nachname, tag, monat, jahr);
+        if (test != 5) error("Invalid input at 'functionAdd()'!");
+        if (!strcmp(structure, "loan")) {
+            t_person* tmpPerson = NULL;
+            tmpPerson = inputPerson(firstPerson, vorname, nachname, atoi(tag), atoi(monat), atoi(jahr));
+            char *buf = malloc(sizeof(char) * 64);
+            sprintf(buf, "%ld", tmpPerson->id);
+            viewExist("item", "addLoan", buf);
+            free(buf);
+        }
+        if (!strcmp(structure, "person")) {
+            inputPerson(firstPerson, vorname, nachname, atoi(tag), atoi(monat), atoi(jahr));
+        }
+        free(vorname);
+        free(nachname);
+        free(tag);
+        free(monat);
+        free(jahr);
+        printf("<a href='https://www2.htw-dresden.de/~s79149/beleg.cgi'>back to the homepage</a><br />");
+    } else if (strstr(queryString, "name=") && strstr(queryString, "type=") && strstr(queryString, "author=")) {
+        char *name = malloc(sizeof(char) * strlen(queryString));
+        char *type = malloc(sizeof(char) * strlen(queryString));
+        char *author = malloc(sizeof(char) * strlen(queryString));
+        char *personId = malloc(sizeof(unsigned long));
+    
+        if (!personId || !name || !type || !author) error("Storage couldn't get reserved in 'functionAdd()'!");
+    
+        test = sscanf(queryString, "%[^_]_name=%[^&]&type=%[^&]&author=%[^&]", personId, name, type, author);
+        if (!test) {
+            test = sscanf(queryString, "_name=%[^&]&type=%[^&]&author=%[^&]", name, type, author);
+            if (test < 2) error("Invalid input given to 'functionAdd()'!");
+        } else {
+            if (test < 3) error("Invalid input given to 'functionAdd()'!");
+        }
+        if (!strcmp(structure, "loan")) {
+            t_item *tmpItem = NULL;
+            tmpItem = inputItem(firstItem, name, type, author);
+            char *itemId = malloc(sizeof(unsigned long));
+            sprintf(itemId, "%ld", tmpItem->id);
+            viewInputLoan("addLoan", personId, itemId);
+            free(itemId);
+        }
+        if (!strcmp(structure, "item")) {
+            inputItem(firstItem, name, type, author);
+        }
+        
+        free(personId);
+        free(name);
+        free(type);
+        free(author);
+        printf("<a href='https://www2.htw-dresden.de/~s79149/beleg.cgi'>back to the homepage</a><br />");
+    }
+    
+    else viewMain(firstPerson, firstItem, firstLoan);
+    
+    return;
+}
+
+/* structure == "person" | "item" | "loan" */
+/* Deletes one element from the <structure>-list. */
+void *functionDelete(char *structure, t_person* firstPerson, t_item* firstItem, t_loan* firstLoan)
+{
+    char *queryString = getenv("QUERY_STRING");
+    void *firstObj = NULL;
+    
+    if (strstr(queryString, "Id=")) {
+        if (strstr(queryString, "Id=all")) {
+            /* Fastest way to clean up everything. */
+            if ((!strcmp(structure, "person") || !strcmp(structure, "item")) && testObj(firstLoan)) {
+                printf("All %ss couldn't get deleted, 'cause there are connected loans left!<br />", structure);
+            } else {
+                writeObjListToData(structure, NULL);
+                printf("All %ss deleted successfully.<br />", structure);
+                
+                if (!strcmp(structure, "loan")) {
+                    t_item *tmpItem = firstItem;
+                    while (tmpItem) {
+                        tmpItem->person = NULL;
+                        tmpItem = tmpItem->next;
+                    }
+                    writeObjListToData("item", firstItem);
+                }
             }
         } else {
-            // wenn eine loan gelöscht wird, sollte auch person->loans beachtet werden!
-            writeObjListToData(structure, NULL); //hier weitermachen das zu generalisieren
-            printf("Es wurden erfolgreich alle %ss gel&ouml;scht.<br />", structure);
-        }
-    } else {
-        if (!strcmp(structure, "item")) firstObj = firstItem;
-        if (!strcmp(structure, "person")) firstObj = firstPerson;
-        if (!strcmp(structure, "loan")) firstObj = firstLoan;
-        
-        test = sscanf(queryString, "Id=%[^&]", identifier);
-        if (test != 1) error("'sscanf()' - Fehler bei 'main():%sId'!", structure);
-        
-        if (strcmp(structure, "loan") && !getObj(atol(identifier), firstLoan)) printf("%s konnte nicht gel&ouml;scht werden, da es noch dazu geh&ouml;rige, offene Ausleihen gibt!", structure);
-        else {
-            firstObj = deleteObjFromList(structure, getObj(atol(identifier), firstObj), firstObj);
-            writeObjListToData(structure, firstObj);
-            printf("%s %ld wurde erfolgreich gel&ouml;scht.<br />", structure, atol(identifier)); // klappt noch nicht wie es sollte wenn die liste leer ist
-            while (1) {
-                queryString = (queryString + strlen(structure) + strlen("Id=") + strlen(identifier) + 1);
-                test = sscanf(queryString, "Id=%[^&]", identifier);
-                if (test != 1) {
-                    break;
-                }
-                if (strcmp(structure, "loan") && !getObj(atol(identifier), firstLoan)) printf("%s konnte nicht gel&ouml;scht werden, da es noch dazu geh&ouml;rige, offene Ausleihen gibt!", structure);
-                else {
-                    firstObj = deleteObjFromList(structure, getObj(atol(identifier), firstObj), firstObj);
-                    writeObjListToData(structure, firstObj);
-                    printf("%s %ld wurde erfolgreich gel&ouml;scht.<br />", structure, atol(identifier)); // klappt noch nicht wie es sollte wenn die liste leer ist
+            int test = 0;
+            char *identifier = malloc(sizeof(unsigned long));
+            if (!identifier) error("Storage couldn't get reserved in 'functionDelete()'!");
+            
+            if (!strcmp(structure, "item")) firstObj = firstItem;
+            if (!strcmp(structure, "person")) firstObj = firstPerson;
+            if (!strcmp(structure, "loan")) firstObj = firstLoan;
+            
+            char buf[64], *token;
+            token = strtok(queryString, "&\0");
+            sprintf(buf, "_%sId=", structure);
+            strcat(buf, "%[^&]");
+            test = sscanf(token, buf, identifier);
+            if (test != 1)
+            {
+                sprintf(buf, "%sId=", structure);
+                strcat(buf, "%[^&]");
+                test = sscanf(token, buf, identifier);
+                if (test != 1) error("Invalid !");
+            }
+            
+            if (firstLoan->id && (!strcmp(structure, "person") || !strcmp(structure, "item")) && !testLoanObj(firstLoan, structure, atol(identifier))) {
+                printf("The %s with the id %s couldn't get deleted, 'cause there are connected loans left!<br />", structure, identifier);
+            } else {
+                firstObj = deleteObjFromList(structure, getObj(atol(identifier), firstObj), firstObj);
+                writeObjListToData(structure, firstObj);
+                printf("%s %ld deleted successfully.<br />", structure, atol(identifier));
+                while (1) {
+                    token = strtok(NULL, "&\0");
+                    if (!token) {
+                        break;
+                    }
+                    sprintf(buf, "_%sId=", structure);
+                    strcat(buf, "%[^&]");
+                    test = sscanf(token, buf, identifier);
+                    if (test != 1)
+                    {
+                        sprintf(buf, "%sId=", structure);
+                        strcat(buf, "%[^&]");
+                        test = sscanf(token, buf, identifier);
+                        if (test != 1) break;
+                    }
+                    if (firstLoan->id && (!strcmp(structure, "person") || !strcmp(structure, "item")) && !testLoanObj(firstLoan, structure, atol(identifier)))
+                        printf("The %s with the id %s couldn't get deleted, 'cause there are connected loans left!<br />", structure, identifier);
+                    else {
+                        firstObj = deleteObjFromList(structure, getObj(atol(identifier), firstObj), firstObj);
+                        writeObjListToData(structure, firstObj);
+                        
+                        printf("%s %ld deleted successfully.<br />", structure, atol(identifier));
+                    }
                 }
             }
+            if (!strcmp(structure, "loan")) writeObjListToData("item", firstItem);
+            free(identifier);
         }
     }
-    printf("<a href='https://www2.htw-dresden.de/~s79149/beleg.cgi'>zur&uuml;ck zur Startseite</a><br />");
+    printf("<a href='https://www2.htw-dresden.de/~s79149/beleg.cgi'>back to the homepage</a><br />");
     
+    return firstObj;
+}
+
+/* Searches for an element and prints the searched element in bold-text-style. */
+void functionSearch(t_person *firstPerson, t_item *firstItem, t_loan *firstLoan)
+{
+    char *queryString = getenv("QUERY_STRING");
+    int test = 0;
     
+    char *prefix = malloc(sizeof(char) * strlen(queryString));
+    char *function = malloc(sizeof(char) * strlen(queryString));
+    char *structure = malloc(sizeof(char) * strlen(queryString));
+    char *type = malloc(sizeof(char) * strlen(queryString));
+    char *searchId = malloc(sizeof(unsigned long));
     
-    
-    if (strstr(queryString, "deletePerson_personId=all")) {
-        if (!testObj(firstLoan)) {
-            /* Schnellste Art alle Personen zu löschen. */
-            firstPerson = NULL;
-            writeObjListToData("person", firstPerson);
-            printf("Es wurden erfolgreich alle Personen gel&ouml;scht.<br />");
-        } else {
-            printf("Es konnten nicht alle Personen gel&ouml;scht werden, da es noch offenen Ausleihen gibt!"); // am besten werden hier alle offenen Ausleihen angezeigt!
-        }
-    } else {
-        test = sscanf(queryString, "dP_personId=%[^&]", personId);
-        if (test != 1) {
-            error("'sscanf()' - Fehler bei 'main():dP_personId'!");
-        }
-        if (!getObj(atol(personId), firstLoan)) {
-            firstPerson = (t_person*) deleteObjFromList("person", getObj(atol(personId), firstPerson), firstPerson);
-            writeObjListToData("person", firstPerson);
-            printf("Person wurde erfolgreich gel&ouml;scht.<br />"); // klappt noch nicht wie es sollte wenn die liste leer ist
-            while (1) {
-                queryString = (queryString + strlen("dP_personId=") + strlen(personId) + 1);
-                test = sscanf(queryString, "dP_personId=%[^&]", personId);
-                if (test != 1) {
-                    break;
-                }
-                firstPerson = (t_person*) deleteObjFromList("person", getObj(atol(personId), firstPerson), firstPerson);
-                writeObjListToData("person", firstPerson);
-                printf("Person wurde erfolgreich gel&ouml;scht.<br />"); // klappt noch nicht wie es sollte wenn die liste leer ist
-            }
-        } else {
-            printf("Die Person %ld konnte nicht gel&ouml;scht werden, da es noch offenen Ausleihen gibt!", atol(personId)); // am besten werden hier die offenen Ausleihen angezeigt!
-        }
+    if (!prefix||!function||!structure||!type) {
+        error("Storage couldn't get reserved in 'stringReplace()'!");
     }
-    printf("<a href='https://www2.htw-dresden.de/~s79149/beleg.cgi'>zur&uuml;ck zur Startseite</a><br />");
+    
+    queryString = strstr(queryString, "search");
+    sscanf(queryString, "search_%[^_]_%[^_]_%[^_]_id=%[^&]&%[^=]=Submit", prefix, type, structure, searchId, function);
+    if (strcmp(prefix, "+")) test++;
+    if (strcmp(function, "+")) test++;
+    if (strcmp(type, "+")) test++;
+    if (strcmp(structure, "+")) test++;
+    if (atoi(searchId)) test++;
+    
+    printf("<a href='#bold'>Jump to searched element</a><br />");
+    
+    switch (test) {
+        case 3:
+            if (!strcmp(structure, "person")) {
+                viewPersonListWithType(firstPerson, function, "", atoi(searchId));
+            }
+            else if (!strcmp(structure, "item")) {
+                viewItemListWithType(firstItem, function, "", atoi(searchId), firstPerson, prefix);
+            }
+            else if (!strcmp(structure, "loan")) {
+                viewLoanListWithType(firstLoan, function, "", atoi(searchId));
+            }
+            else error("Invalid structure given to 'functionSearch()'!");
+            break;
+        case 4:
+            if (!strcmp(structure, "person")) {
+                viewPersonListWithType(firstPerson, function, type, atoi(searchId));
+            }
+            else if (!strcmp(structure, "item")) {
+                viewItemListWithType(firstItem, function, type, atoi(searchId), firstPerson, "");
+            }
+            else error("Invalid structure given to 'functionSearch()'!");
+            break;
+        case 5:
+            if (!strcmp(structure, "item")) {
+                viewItemListWithType(firstItem, function, type, atoi(searchId), firstPerson, prefix);
+            }
+            else error("Invalid structure given to 'functionSearch()'!");
+            break;
+        default:
+            error("Invalid input given to 'functionSearch()'!");
+            break;
+    }
+    
+    printf("<a href='#bold'>Jump to searched element</a><br />");
+    
+    printf("<a href='https://www2.htw-dresden.de/~s79149/beleg.cgi'>back to the homepage</a><br />");
+    
+    free(prefix);
+    free(function);
+    free(structure);
+    free(type);
+    free(searchId);
+    
+    return;
 }

@@ -1,7 +1,7 @@
 //
 //  date.h
 //  beleg
-//
+//  46139
 //  Created by Mauritius Berger on 12.12.18.
 //  Copyright © 2018 Mauritius Berger. All rights reserved.
 //
@@ -13,13 +13,11 @@ typedef struct date {
     int day;
     int month;
     int year;
-} t_date;                      // t_date = struct date
+} t_date;
 
-/* Funktionen zum Handling mit Datumswerten */
+/* date-handling */
 t_date* createDate(int tag, int monat, int jahr);
 
 t_date* getDateFromString(char* string);
-
-int testDate(t_date* tmpDate);
 
 #endif /* date_h */

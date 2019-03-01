@@ -1,3 +1,11 @@
 .disabled-radio {
     color: grey;
 }
+
+#bold {
+    font-weight: bold;
+}
+
+body {
+    background-color: darkgoldenrod;
+}

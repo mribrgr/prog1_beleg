@@ -1,50 +1,42 @@
 //
 //  itemListData.c
 //  beleg
-//
+//  46139
 //  Created by Mauritius Berger on 02.01.19.
 //  Copyright © 2019 Mauritius Berger. All rights reserved.
 //
 
-/* Standardbibliotheken */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
-/* Eigene Header-Dateien */
 #include "main.h"
 #include "date.h"
 #include "item.h"
 #include "person.h"
 #include "loan.h"
 
-/* parst die Daten aus dem eingegebenen File und gibt die Daten als Item zurück */
 t_item* getItemFromData(FILE* filePointer, t_person* firstPerson, t_item* firstItem)
 {
-    /* Deklarationen & Definitionen */
-    char line[64];
+    char line[MAX_LINE_SIZE];
     
     t_item* tmpItem = malloc(sizeof(t_item));
-    if (!tmpItem) {
-        error("Speicherreservierungen fehlgeschlagen bei 'getItemFromData()'!");
-    }
+    if (!tmpItem)
+        error("Storage couldn't get reserved in 'getItemFromData()'!");
     
-    fgets(line, 64, filePointer);
+    fgets(line, MAX_LINE_SIZE, filePointer);
     
-    if (!testLoanDataLine(line)) {
-        return NULL; // eigentlich sollte er nur abbrechen wenn das file zu ende ist und nicht beim ersten ungültigen
-    }
+    if (!testItemDataLine(line)) return NULL;
     
-    char* partId = malloc(sizeof(char) * 64);
-    char* partPersonId = malloc(sizeof(char) * 64);
-    char* partName = malloc(sizeof(char) * 64);
-    char* partType = malloc(sizeof(char) * 64);
-    char* partAuthor = malloc(sizeof(char) * 64);
+    char* partId = malloc(sizeof(char) * MAX_LINE_SIZE);
+    char* partPersonId = malloc(sizeof(char) * MAX_LINE_SIZE);
+    char* partName = malloc(sizeof(char) * MAX_LINE_SIZE);
+    char* partType = malloc(sizeof(char) * MAX_LINE_SIZE);
+    char* partAuthor = malloc(sizeof(char) * MAX_LINE_SIZE);
     
-    if (!partId || !partPersonId || !partName || !partType || !partAuthor) {
-        error("Speicher konnte nicht reserviert werden bei 'getItemFromData()'!");
-    }
+    if (!partId || !partPersonId || !partName || !partType || !partAuthor)
+        error("Storage couldn't get reserved in 'getItemFromData()'!");
     
     strcpy(partId, strtok(line, ",\0"));
     strcpy(partPersonId, strtok(NULL, ",\0"));
@@ -58,6 +50,8 @@ t_item* getItemFromData(FILE* filePointer, t_person* firstPerson, t_item* firstI
         partAuthor,
         atol(partId)
     );
+    
+    if (atol(partPersonId) > 0) tmpItem->person = (t_person *) getObj(atol(partPersonId), firstPerson);
     
     free(partId);
     free(partPersonId);
